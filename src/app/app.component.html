@@ -1,3 +1,16 @@
-<h1>
-  {{title}}
-</h1>
+<h1>{{title}}</h1>
+<div
+    class="topic-column"
+    *ngFor="let topic of data | async; trackBy: trackTopic">
+    {{topic.name}}
+    <button
+        md-icon-button
+        (click)="addComment(topic.id)">
+        <md-icon>add</md-icon>
+    </button>
+    <ul>
+        <li *ngFor="let comment of topic.comments; trackBy: trackComment">
+            <app-comment [comment]="comment"></app-comment>
+        </li>
+    </ul>
+</div>

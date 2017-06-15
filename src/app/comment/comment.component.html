@@ -1,0 +1,37 @@
+<md-card>
+    <div *ngIf="!isEditing">
+        <span >{{comment.value}}</span>
+        <div>
+            <button
+                md-icon-button
+                (click)="startEdit()">
+                <md-icon>edit</md-icon>
+            </button>
+            <button
+                md-icon-button
+                (click)="deleteComment()">
+                <md-icon>delete</md-icon>
+            </button>
+        </div>
+    </div>
+    <div *ngIf="isEditing">
+        <md-input-container>
+            <textarea
+                mdInput
+                [(ngModel)]="editValue">
+            </textarea>
+        </md-input-container>
+        <div>
+            <button
+                md-icon-button
+                (click)="cancelEdit()">
+                <md-icon>cancel</md-icon>
+            </button>
+            <button
+                md-icon-button
+                (click)="saveComment()">
+                <md-icon>save</md-icon>
+            </button>
+        </div>
+    </div>
+</md-card>
