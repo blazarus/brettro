@@ -1,39 +1,40 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Comment } from '../app.component';
+import { Comment, Topic, commentFragment } from '../app.component';
+import { topicFragment } from '../room/room.component';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
 import gql from 'graphql-tag';
+import { findIndex } from 'lodash';
 
 const fetchComment = gql`
 query Comment($commentId: Int!) {
     comment(commentId: $commentId) {
-        id
-        exposed
-        value
+        ...commentFields
     }
 }
+${commentFragment}
 `;
+
 const updateComment = gql`
 mutation updateComment($commentId: Int!, $value: String) {
     updateComment(commentId: $commentId, value: $value) {
-        id
-        exposed
-        value
+        ...commentFields
     }
 }
+${commentFragment}
 `;
+
 const deleteComment = gql`
 mutation deleteComment($commentId: Int!) {
     deleteComment(commentId: $commentId) {
         id
-        name
-        comments {
-            id
-            exposed
-            value
-        }
     }
 }
 `;
+
+interface CommentQueryResponse {
+    comment: Comment;
+    loading: boolean;
+}
 
 @Component({
     selector: 'app-comment',
@@ -49,7 +50,19 @@ export class CommentComponent implements OnInit {
 
     constructor(private apollo: Apollo) {}
 
-    ngOnInit() {}
+    ngOnInit() {
+        // TODO just to show that a custom resolver should allow this to come from the cache
+        this.apollo.watchQuery<CommentQueryResponse>({
+            query: fetchComment,
+            variables: {
+                commentId: this.comment.id
+            }
+        })
+            .subscribe(() => {
+                // Not doing anything with this right now, but could instead allow the parent to only pass the comment id and not care
+                // about what data is needed in the comment itself
+            });
+    }
 
     public startEdit(): void {
         this.isEditing = true;
@@ -78,7 +91,27 @@ export class CommentComponent implements OnInit {
     public deleteComment(): void {
         this.apollo.mutate({
             mutation: deleteComment,
-            variables: { commentId: this.comment.id }
+            variables: { commentId: this.comment.id },
+            update: (proxy) => {
+                const id = `Topic:${this.comment.topic.id}`;
+                const oldRes: Topic = proxy.readFragment<Topic>({
+                    fragment: topicFragment,
+                    fragmentName: 'topicFields',
+                    id
+                });
+                if (!oldRes) {
+                    // Could have been deleted
+                    return;
+                }
+                const idx = findIndex(oldRes.comments, (comment) => comment.id === this.comment.id);
+                oldRes.comments.splice(idx, 1);
+                proxy.writeFragment({
+                    fragment: topicFragment,
+                    fragmentName: 'topicFields',
+                    id,
+                    data: oldRes
+                });
+            }
         });
     }
 

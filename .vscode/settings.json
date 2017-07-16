@@ -2,5 +2,6 @@
 {
     "tslint.rulesDirectory": "./node_modules/codelyzer",
     "typescript.tsdk": "node_modules/typescript/lib",
-    "editor.rulers": [140]
+    "editor.rulers": [140],
+    "tslint.configFile": "./tslint.json"
 }

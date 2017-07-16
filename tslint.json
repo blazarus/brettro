@@ -1,6 +1,6 @@
 {
   "rulesDirectory": [
-    "node_modules/codelyzer"
+    "./node_modules/codelyzer"
   ],
   "rules": {
     "callable-types": true,
@@ -10,14 +10,14 @@
       "check-space"
     ],
     "curly": true,
-    "eofline": true,
+    "eofline": false,
     "forin": true,
     "import-blacklist": [true, "rxjs"],
     "import-spacing": true,
     "indent": [
       true,
       "spaces",
-      4
+      2
     ],
     "interface-over-type-literal": true,
     "label-position": true,

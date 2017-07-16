@@ -1,39 +1,38 @@
 import { Component, OnInit } from '@angular/core';
-
+import { FormControl } from '@angular/forms';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
+import { ApolloError } from 'apollo-client';
 import gql from 'graphql-tag';
-
-import { find } from 'lodash';
-
-import { Observable } from 'rxjs/observable';
+import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 
-const query = gql`
-query Comments {
-    topics {
+const allRoomsQuery = gql`
+query AllRooms {
+    rooms {
         id
-        name
-        comments {
-            id
-            exposed
-            value
-        }
+        title
     }
 }
 `;
 
-const addComment = gql`
-mutation addComment($topicId: Int!) {
-    addComment(topicId: $topicId) {
+export const commentFragment = gql`
+fragment commentFields on Comment {
+    id
+    exposed
+    value
+    topic {
         id
-        exposed
-        value
     }
 }
 `;
 
-class Topic {
+export class Room {
+    id: number;
+    title: string;
+    topics?: [Topic];
+}
+export class Topic {
     id: number;
     name: string;
     comments: [Comment];
@@ -42,65 +41,37 @@ export class Comment {
     id: number;
     exposed: boolean;
     value: string;
+    topic: {
+        id: number
+    }
 }
-interface QueryResponse {
-  topics: [Topic];
-  loading: boolean;
-}
-interface AddCommentMutationResponse {
-    data: {
-        addComment: Comment
-    };
+interface AllRoomsQueryResponse {
+    rooms: [Room];
 }
 
 @Component({
     selector: 'app-root',
-    styles: [`
-        .topic-column {
-            width: 300px;
-            float: left;
-            padding: 10px;
-        }
-    `],
+    styleUrls: [],
     templateUrl: 'app.component.html'
 })
 export class AppComponent implements OnInit {
     title = 'Brettro';
-    data: Observable<[Topic]>;
-    error: boolean;
+    selectedRoomId: number;
+    queryResult: ApolloQueryObservable<AllRoomsQueryResponse>;
+    roomsObs: Observable<[Room]>;
 
     constructor(private apollo: Apollo) {}
 
     public ngOnInit() {
-        this.data = this.apollo.watchQuery<QueryResponse>({ query })
-            .map(({data}) => data.topics);
-    }
-
-    public trackTopic(index: number, topic: Topic): number {
-        return topic.id;
-    }
-
-    public trackComment(index: number, comment: Comment): number {
-        return comment.id;
-    }
-
-    public addComment(topicId: number): void {
-        this.apollo.mutate({
-            mutation: addComment,
-            variables: { topicId },
-            updateQueries: {
-                Comments(prev, { mutationResult }): object {
-                    const res = <AddCommentMutationResponse> mutationResult;
-                    const prevRes = <QueryResponse> prev;
-
-                    if (!res.data) { return prev };
-
-                    const topic: Topic = find(prevRes.topics, (top) => top.id === topicId);
-                    topic.comments.push(res.data.addComment);
-
-                    return prev;
-                }
-            }
+        this.queryResult = this.apollo.watchQuery<AllRoomsQueryResponse>({
+            query: allRoomsQuery
+        });
+        // XXX probably need to be cleaning up in onDestroy
+        this.roomsObs = this.queryResult.map(({data: {rooms}}) => rooms);
+        this.roomsObs.subscribe((rooms) => {
+            // assume there is at least one room for now
+            this.selectedRoomId = rooms[0].id;
         });
     }
+
 };

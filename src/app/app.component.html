@@ -1,16 +1,12 @@
 <h1>{{title}}</h1>
-<div
-    class="topic-column"
-    *ngFor="let topic of data | async; trackBy: trackTopic">
-    {{topic.name}}
-    <button
-        md-icon-button
-        (click)="addComment(topic.id)">
-        <md-icon>add</md-icon>
-    </button>
-    <ul>
-        <li *ngFor="let comment of topic.comments; trackBy: trackComment">
-            <app-comment [comment]="comment"></app-comment>
-        </li>
-    </ul>
-</div>
+<app-loading [queryResult]="queryResult">
+    <!-- Just using ngIf for convenience to get the non-async rooms -->
+    <div *ngIf="roomsObs | async as rooms">
+        <md-select [(ngModel)]="selectedRoomId">
+            <md-option
+                *ngFor="let room of rooms;"
+                [value]="room.id">{{room.title}}</md-option>
+        </md-select>
+        <app-room [roomId]="selectedRoomId"></app-room>
+    </div>
+</app-loading>

@@ -1,0 +1,28 @@
+<app-loading [queryResult]="roomQuery">
+    <div *ngIf="roomObs | async as room">
+        <h2>{{ room.title }}</h2>
+        <div>
+            <button md-button (click)="addTopic()">Add topic</button>
+        </div>
+        <div
+            class="topic-column"
+            *ngFor="let topic of room.topics; trackBy: trackTopic">
+            <button
+                md-icon-button
+                (click)="deleteTopic(topic.id)">
+                <md-icon>delete</md-icon>
+            </button>
+            {{topic.name}}
+            <button
+                md-icon-button
+                (click)="addComment(topic.id)">
+                <md-icon>add</md-icon>
+            </button>
+            <ul>
+                <li *ngFor="let comment of topic.comments; trackBy: trackComment">
+                    <app-comment [comment]="comment"></app-comment>
+                </li>
+            </ul>
+        </div>
+    </div>
+</app-loading>

@@ -2,16 +2,6 @@ import * as express from 'express';
 import { graphqlExpress } from 'graphql-server-express';
 import {json, urlencoded} from 'body-parser';
 
-// import {
-//   GITHUB_CLIENT_ID,
-//   GITHUB_CLIENT_SECRET,
-// } from './githubKeys';
-
-// import { setUpGitHubLogin } from './githubLogin';
-// import { GitHubConnector } from './github/connector';
-// import { Repositories, Users } from './github/models';
-// import { Entries, Comments } from './sql/models';
-
 import { createServer } from 'http';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { execute } from 'graphql';
@@ -24,7 +14,7 @@ if (process.env.PORT) {
   PORT = parseInt(process.env.PORT, 10) + 100;
 }
 
-const WS_PORT = process.env.WS_PORT || 8080;
+const WS_PORT = process.env.WS_PORT || 3011;
 
 const app = express();
 
@@ -43,13 +33,7 @@ app.use('/graphql', graphqlExpress((req) => {
 
   return {
     schema,
-    context: {
-      // user,
-      // Repositories: new Repositories({ connector: gitHubConnector }),
-      // Users: new Users({ connector: gitHubConnector }),
-      // Entries: new Entries(),
-      // Comments: new Comments(),
-    },
+    context: {},
   };
 }));
 
@@ -67,11 +51,6 @@ app.use('/graphql', graphqlExpress((req) => {
 // `,
 // }));
 
-// Serve our helpful static landing page. Not used in production.
-// app.get('/', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'index.html'));
-// });
-
 app.listen(PORT, () => console.log( // eslint-disable-line no-console
   `API Server is now running on http://localhost:${PORT}`
 ));
@@ -82,40 +61,14 @@ const websocketServer = createServer((request, response) => {
   response.end();
 });
 
-// websocketServer.listen(WS_PORT, () => console.log( // eslint-disable-line no-console
-//   `Websocket Server is now running on http://localhost:${WS_PORT}`
-// ));
-
+websocketServer.listen(WS_PORT, () => console.log( // eslint-disable-line no-console
+  `Websocket Server is now running on http://localhost:${WS_PORT}`
+));
 
 SubscriptionServer.create({
     schema,
     execute
 }, {
     server: websocketServer,
-    path: '/graphql',
+    path: '/subscriptions',
 });
-/* tslint:disable:no-unused-expression */
-// new SubscriptionServer(
-//   {
-//     subscriptionManager,
-
-//     // the obSubscribe function is called for every new subscription
-//     // and we use it to set the GraphQL context for this subscription
-//     onSubscribe: (msg, params) => {
-//       // const gitHubConnector = new GitHubConnector({
-//       //   clientId: GITHUB_CLIENT_ID,
-//       //   clientSecret: GITHUB_CLIENT_SECRET,
-//       // });
-//       // return Object.assign({}, params, {
-//       //   context: {
-//       //     Repositories: new Repositories({ connector: gitHubConnector }),
-//       //     Users: new Users({ connector: gitHubConnector }),
-//       //     Entries: new Entries(),
-//       //     Comments: new Comments(),
-//       //   },
-//       // });
-//     },
-//   },
-//   app,
-// );
-/* tslint:disable:no-unused-expression */

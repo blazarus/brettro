@@ -1,0 +1,19 @@
+<h2 md-dialog-title>Add topic</h2>
+<form
+    #topicForm="ngForm"
+    novalidate>
+    <md-dialog-content>
+        <md-input-container>
+            <input
+                mdInput
+                placeholder="Topic name"
+                [(ngModel)]="newTopicName"
+                name="topicName"
+                required>
+        </md-input-container>
+    </md-dialog-content>
+    <md-dialog-actions>
+        <button md-button md-dialog-close>Cancel</button>
+        <button md-button [md-dialog-close]="newTopicName" [disabled]="!topicForm.form.valid">Add topic</button>
+    </md-dialog-actions>
+</form>

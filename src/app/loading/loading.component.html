@@ -1,0 +1,7 @@
+<div *ngIf="!error; else errorTpl">
+    <div *ngIf="loading; else theContent">Loading...</div>
+</div>
+<ng-template #errorTpl>Error!</ng-template>
+<ng-template #theContent>
+    <ng-content></ng-content>
+</ng-template>
