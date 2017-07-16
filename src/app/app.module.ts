@@ -40,7 +40,7 @@ const batchingNetworkInterface = createBatchingNetworkInterface({
     batchInterval: 10,
     batchMax: 10,
 });
-const wsClient = new SubscriptionClient('ws://localhost:3011/subscriptions', {
+const wsClient = new SubscriptionClient('ws://localhost:3010/subscriptions', {
     reconnect: true
 });
 wsClient.onDisconnected(() => {

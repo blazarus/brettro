@@ -142,21 +142,6 @@ function generateId(collection: Array<any>): number {
     return collection.length ? Math.max(...collection.map((item) => item.id)) + 1 : 1;
 }
 
-// pubsub.subscribe('Comment', (data) => {
-//     console.log('got here!!!!!', data);
-// })
-const a = pubsub.asyncIterator('Comment');
-async function hello() {
-    console.log('hello there', await a.next());
-    console.log('next', await a.next());
-    for await (const thing of a.next()) {
-        console.log(thing);
-    }
-}
-hello().catch(() => {
-
-});
-
 const resolvers = {
     Query: {
         comment(root, { commentId }: { commentId: number }): Comment {
