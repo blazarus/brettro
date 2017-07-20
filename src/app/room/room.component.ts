@@ -7,6 +7,7 @@ import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { MdDialog } from '@angular/material';
 import { AddTopicDialogComponent } from '../add-topic-dialog/add-topic-dialog.component';
+import update from 'immutability-helper';
 
 interface RoomQueryResponse {
     room: Room;
@@ -78,8 +79,9 @@ ${topicFragment}
 const addCommentSubscription = gql`
 subscription {
     Comment {
+        mutation
         node {
-            id
+            ...commentFields
         }
     }
 }
@@ -115,21 +117,18 @@ export class RoomComponent implements OnInit, OnChanges {
             variables: { roomId: this.roomIdSubject },
             notifyOnNetworkStatusChange: true
         });
-        // this.roomQuery.subscribe(() => {
-        //     console.log('room query subscribe');
-        // });
         this.apollo.subscribe({
             query: addCommentSubscription
         })
-            .subscribe((data) => {
-                console.log('here', data);
+            .subscribe(({Comment: {node}}: {Comment: {node: Comment}}) => {
+                this.roomQuery.updateQuery((prev: RoomQueryResponse) => {
+                    const topicId = node.topic.id;
+                    const topicIdx = findIndex(prev.room.topics, (top: Topic) => top.id === topicId);
+                    // Apollo-client does a deep freeze of the previous state, so we have to create new instances.
+                    // immutability-helper makes this slightly easier, but is still kind of nasty and not type safe
+                    return update(prev, { room: {topics: {[topicIdx]: {comments: {$push: [node]}}}}});
+                });
             });
-        // this.roomQuery.subscribeToMore({
-        //     document: addCommentSubscription,
-        //     updateQuery() {
-        //         console.log('hello there');
-        //     }
-        // });
 
         this.roomObs = this.roomQuery.map(({data: {room}}) => room);
     }

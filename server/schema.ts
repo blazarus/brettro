@@ -253,11 +253,11 @@ const resolvers = {
         }
     },
     Topic: {
-        comments(topic: Topic): Comment {
+        comments(topic: Topic): Comment[] {
             return filter(comments, (comment) => comment.topicId === topic.id);
         },
         room(topic: Topic): Room {
-            return filter(rooms, (room) => room.id === topic.roomId);
+            return find(rooms, (room) => room.id === topic.roomId);
         }
     },
     Room: {
