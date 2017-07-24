@@ -36,11 +36,6 @@ mutation deleteComment($commentId: Int!) {
 }
 `;
 
-// interface CommentQueryResponse {
-//     comment: Comment;
-//     loading: boolean;
-// }
-
 @Component({
     selector: 'app-comment',
     templateUrl: './comment.component.html',
@@ -92,31 +87,10 @@ export class CommentComponent implements OnInit {
             });
     }
 
-    // XXX right now we're keeping things up to date because this query refetches the entire Topic, which will not scale well
     public deleteComment(): void {
         this.apollo.mutate({
             mutation: deleteComment,
-            variables: { commentId: this.comment.id },
-            update: (proxy) => {
-                const id = `Topic:${this.comment.topic.id}`;
-                const oldRes: TopicFieldsFragment = proxy.readFragment<TopicFieldsFragment>({
-                    fragment: topicFragment,
-                    fragmentName: 'topicFields',
-                    id
-                });
-                if (!oldRes) {
-                    // Could have been deleted
-                    return;
-                }
-                const idx = findIndex(oldRes.comments, (comment) => comment.id === this.comment.id);
-                oldRes.comments.splice(idx, 1);
-                proxy.writeFragment({
-                    fragment: topicFragment,
-                    fragmentName: 'topicFields',
-                    id,
-                    data: oldRes
-                });
-            }
+            variables: { commentId: this.comment.id }
         });
     }
 

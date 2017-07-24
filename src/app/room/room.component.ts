@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, ChangeDetectorRef } from '@angular/core';
 import { commentFragment } from '../app.component';
 import {
     AddCommentMutation,
@@ -7,7 +7,8 @@ import {
     RoomFieldsFragment,
     TopicFieldsFragment,
     CommentFieldsFragment,
-    MySubSubscription
+    MySubSubscription,
+    _ModelMutationType
 } from '../../generated/query-types';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
 import gql from 'graphql-tag';
@@ -117,7 +118,7 @@ export class RoomComponent implements OnInit, OnChanges {
     roomObs: Observable<RoomFieldsFragment>;
     roomQuery: ApolloQueryObservable<RoomQuery>;
 
-    constructor(private apollo: Apollo, private dialog: MdDialog) {}
+    constructor(private apollo: Apollo, private dialog: MdDialog, private cdr: ChangeDetectorRef) {}
 
     ngOnInit() {
         this.roomIdSubject = new BehaviorSubject(this.roomId);
@@ -129,17 +130,43 @@ export class RoomComponent implements OnInit, OnChanges {
         this.apollo.subscribe({
             query: addCommentSubscription
         })
-            .subscribe(({Comment: {node}}: MySubSubscription) => {
-                this.roomQuery.updateQuery((prev: RoomQuery) => {
+            .subscribe(({Comment: {node, mutation}}: MySubSubscription) => {
+                this.roomQuery.updateQuery((prev: RoomQuery): RoomQuery => {
                     const topicId = node.topic.id;
                     const topicIdx = findIndex(prev.room.topics, (top: TopicFieldsFragment) => top.id === topicId);
                     // Apollo-client does a deep freeze of the previous state, so we have to create new instances.
                     // immutability-helper makes this slightly easier, but is still kind of nasty and not type safe
-                    return update(prev, { room: {topics: {[topicIdx]: {comments: {$push: [node]}}}}});
+                    if (mutation === 'CREATED') {
+                        return update(prev, { room: {topics: {[topicIdx]: {comments: {$push: [node]}}}}});
+                    } else if (mutation === 'UPDATED') {
+                        const commentIdx = findIndex(prev.room.topics[topicIdx].comments, (cmt) => cmt.id === node.id);
+                        if (commentIdx < 0) {
+                            return prev;
+                        }
+                        return update(prev, { room: {topics: {[topicIdx]: {comments: {
+                            [commentIdx]: { $set: node }
+                        }}}}});
+                    } else {
+                        const commentIdx = findIndex(prev.room.topics[topicIdx].comments, (cmt) => cmt.id === node.id);
+                        if (commentIdx < 0) {
+                            return prev;
+                        }
+                        return update(prev, { room: {topics: {[topicIdx]: {comments: {
+                            $splice: [[commentIdx, 1]]
+                        }}}}});
+                    }
+
                 });
             });
 
         this.roomObs = this.roomQuery.map(({data: {room}}) => room);
+        this.roomObs.subscribe((room) => {
+            // For some reason I need this for the update Comment subscription to actually get reflected in the UI immediately.
+            // Seems like something in apollo must be happening asyncronously and not triggering change detection
+            setTimeout(() => {
+                this.cdr.detectChanges();
+            }, 0);
+        });
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -194,26 +221,7 @@ export class RoomComponent implements OnInit, OnChanges {
     public addComment(topicId: number): void {
         this.apollo.mutate({
             mutation: addCommentMutation,
-            variables: { topicId },
-            // update(proxy, { data: { addComment }}: AddCommentMutation) {
-                // const id = `Topic:${topicId}`;
-                // const oldRes: Topic = proxy.readFragment<Topic>({
-                //     fragment: topicFragment,
-                //     fragmentName: 'topicFields',
-                //     id
-                // });
-                // if (!oldRes) {
-                //     // Could have been deleted
-                //     return;
-                // }
-                // oldRes.comments.push(addComment);
-                // proxy.writeFragment({
-                //     fragment: topicFragment,
-                //     fragmentName: 'topicFields',
-                //     id,
-                //     data: oldRes
-                // });
-            // }
+            variables: { topicId }
         });
     }
 

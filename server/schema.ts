@@ -182,14 +182,17 @@ const resolvers = {
             }
             comment.value = value || '';
 
+            pubsub.publish('Comment', {Comment: {mutation: 'UPDATED', node: comment}});
             return comment;
         },
         deleteComment(root, { commentId }: { commentId: number }, context): Topic {
             const commentIdx = findIndex(comments, (com) => com.id === commentId);
+            const oldComment = comments[commentIdx];
             const topicId = comments[commentIdx].topicId;
             const topic = find(topics, (top) => top.id === topicId);
 
             comments.splice(commentIdx, 1);
+            pubsub.publish('Comment', {Comment: {mutation: 'DELETED', node: oldComment}});
 
             return topic;
         },
@@ -201,17 +204,19 @@ const resolvers = {
                 roomId
             };
             topics.push(newTopic);
+            pubsub.publish('Topic', {Comment: {mutation: 'CREATED', node: Topic}});
 
             return newTopic;
         },
         deleteTopic(root, { topicId }: { topicId: number }): Room {
             // XXX we should really also be deleting any comments that were in this topic
             const topicIdx = findIndex(topics, (topic) => topic.id === topicId);
+            const oldTopic = topics[topicIdx];
             const roomId = topics[topicIdx].roomId;
             const room = find(rooms, (rm) => rm.id === roomId);
 
             topics.splice(topicIdx, 1);
-
+            pubsub.publish('Topic', {Comment: {mutation: 'DELETED', node: oldTopic}});
             return room;
         },
         addRoom(root, { title }: { title?: string }): Room {
@@ -221,7 +226,7 @@ const resolvers = {
                 title
             };
             rooms.push(newRoom);
-
+            pubsub.publish('Room', {Comment: {mutation: 'CREATED', node: newRoom}});
             return newRoom;
         },
         updateRoom(root, { roomId, title }: { roomId: number, title: string }): Room {
@@ -230,7 +235,7 @@ const resolvers = {
                 throw new Error(`Could not find comment with id ${roomId}`);
             }
             room.title = title || '';
-
+            pubsub.publish('Comment', {Comment: {mutation: 'UPDATED', node: room}});
             return room;
         }
     },
