@@ -9,7 +9,10 @@
         "test": "ng test",
         "lint": "ng lint",
         "e2e": "ng e2e",
-        "server": "nodemon --watch server/**/*.ts --exec ts-node ./server/index.ts"
+        "server": "nodemon --watch server/**/*.ts --exec ts-node ./server/index.ts",
+        "codegen:introspect": "apollo-codegen introspect-schema server/schema.graphql --output src/generated/schema.json",
+        "codegen:generate": "apollo-codegen generate './src/**/*.ts' --schema src/generated/schema.json --target typescript --output src/generated/query-types.ts",
+        "codegen": "npm run codegen:introspect && npm run codegen:generate"
     },
     "private": true,
     "dependencies": {
@@ -28,6 +31,7 @@
         "angular-in-memory-web-api": "^0.3.1",
         "apollo-angular": "^0.13.0",
         "apollo-client": "^1.4.2",
+        "apollo-codegen": "^0.15.2",
         "core-js": "^2.4.1",
         "express": "^4.15.3",
         "graphql": "^0.10.1",

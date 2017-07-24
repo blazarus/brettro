@@ -6,6 +6,11 @@ import gql from 'graphql-tag';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
+import {
+    AllRoomsQuery,
+    RoomQuery,
+    RoomFieldsFragment
+} from '../generated/query-types';
 
 const allRoomsQuery = gql`
 query AllRooms {
@@ -27,27 +32,27 @@ fragment commentFields on Comment {
 }
 `;
 
-export class Room {
-    id: number;
-    title: string;
-    topics?: [Topic];
-}
-export class Topic {
-    id: number;
-    name: string;
-    comments: [Comment];
-}
-export class Comment {
-    id: number;
-    exposed: boolean;
-    value: string;
-    topic: {
-        id: number
-    }
-}
-interface AllRoomsQueryResponse {
-    rooms: [Room];
-}
+// export class Room {
+//     id: number;
+//     title: string;
+//     topics?: [Topic];
+// }
+// export class Topic {
+//     id: number;
+//     name: string;
+//     comments: [Comment];
+// }
+// export class Comment {
+//     id: number;
+//     exposed: boolean;
+//     value: string;
+//     topic: {
+//         id: number
+//     }
+// }
+// interface AllRoomsQueryResponse {
+//     rooms: [Room];
+// }
 
 @Component({
     selector: 'app-root',
@@ -57,13 +62,13 @@ interface AllRoomsQueryResponse {
 export class AppComponent implements OnInit {
     title = 'Brettro';
     selectedRoomId: number;
-    queryResult: ApolloQueryObservable<AllRoomsQueryResponse>;
-    roomsObs: Observable<[Room]>;
+    queryResult: ApolloQueryObservable<AllRoomsQuery>;
+    roomsObs: Observable<[RoomFieldsFragment]>;
 
     constructor(private apollo: Apollo) {}
 
     public ngOnInit() {
-        this.queryResult = this.apollo.watchQuery<AllRoomsQueryResponse>({
+        this.queryResult = this.apollo.watchQuery<AllRoomsQuery>({
             query: allRoomsQuery
         });
         // XXX probably need to be cleaning up in onDestroy

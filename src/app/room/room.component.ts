@@ -1,5 +1,14 @@
 import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
-import { Room, Topic, Comment, commentFragment } from '../app.component';
+import { commentFragment } from '../app.component';
+import {
+    AddCommentMutation,
+    AddTopicMutation,
+    RoomQuery,
+    RoomFieldsFragment,
+    TopicFieldsFragment,
+    CommentFieldsFragment,
+    MySubSubscription
+} from '../../generated/query-types';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { find, findIndex } from 'lodash';
@@ -9,23 +18,23 @@ import { MdDialog } from '@angular/material';
 import { AddTopicDialogComponent } from '../add-topic-dialog/add-topic-dialog.component';
 import update from 'immutability-helper';
 
-interface RoomQueryResponse {
-    room: Room;
-    loading: boolean;
-}
-interface AddCommentMutationResponse {
-    data: {
-        addComment: Comment
-    };
-}
-interface AddTopicMutationResult {
-    data: {
-        addTopic: Topic
-    }
-}
-interface DeleteTopicMutationResponse {
-    data: {}
-}
+// interface RoomQuery {
+//     room: Room;
+//     loading: boolean;
+// }
+// interface AddCommentMutationResponse {
+//     data: {
+//         addComment: Comment
+//     };
+// }
+// interface AddTopicMutationResult {
+//     data: {
+//         addTopic: Topic
+//     }
+// }
+// interface DeleteTopicMutationResponse {
+//     data: {}
+// }
 
 export const topicFragment = gql`
 fragment topicFields on Topic {
@@ -77,7 +86,7 @@ ${topicFragment}
 `;
 
 const addCommentSubscription = gql`
-subscription {
+subscription mySub {
     Comment {
         mutation
         node {
@@ -105,14 +114,14 @@ export class RoomComponent implements OnInit, OnChanges {
 
     @Input() private roomId: number;
     private roomIdSubject: BehaviorSubject<number>;
-    roomObs: Observable<Room>;
-    roomQuery: ApolloQueryObservable<RoomQueryResponse>;
+    roomObs: Observable<RoomFieldsFragment>;
+    roomQuery: ApolloQueryObservable<RoomQuery>;
 
     constructor(private apollo: Apollo, private dialog: MdDialog) {}
 
     ngOnInit() {
         this.roomIdSubject = new BehaviorSubject(this.roomId);
-        this.roomQuery = this.apollo.watchQuery<RoomQueryResponse>({
+        this.roomQuery = this.apollo.watchQuery<RoomQuery>({
             query: roomQuery,
             variables: { roomId: this.roomIdSubject },
             notifyOnNetworkStatusChange: true
@@ -120,10 +129,10 @@ export class RoomComponent implements OnInit, OnChanges {
         this.apollo.subscribe({
             query: addCommentSubscription
         })
-            .subscribe(({Comment: {node}}: {Comment: {node: Comment}}) => {
-                this.roomQuery.updateQuery((prev: RoomQueryResponse) => {
+            .subscribe(({Comment: {node}}: MySubSubscription) => {
+                this.roomQuery.updateQuery((prev: RoomQuery) => {
                     const topicId = node.topic.id;
-                    const topicIdx = findIndex(prev.room.topics, (top: Topic) => top.id === topicId);
+                    const topicIdx = findIndex(prev.room.topics, (top: TopicFieldsFragment) => top.id === topicId);
                     // Apollo-client does a deep freeze of the previous state, so we have to create new instances.
                     // immutability-helper makes this slightly easier, but is still kind of nasty and not type safe
                     return update(prev, { room: {topics: {[topicIdx]: {comments: {$push: [node]}}}}});
@@ -139,11 +148,11 @@ export class RoomComponent implements OnInit, OnChanges {
         }
     }
 
-    public trackTopic(index: number, topic: Topic): number {
+    public trackTopic(index: number, topic: TopicFieldsFragment): number {
         return topic.id;
     }
 
-    public trackComment(index: number, comment: Comment): number {
+    public trackComment(index: number, comment: CommentFieldsFragment): number {
         return comment.id;
     }
 
@@ -158,9 +167,9 @@ export class RoomComponent implements OnInit, OnChanges {
             this.apollo.mutate({
                 mutation: addTopicMutation,
                 variables: { roomId, name },
-                update(proxy, { data: { addTopic }}: AddTopicMutationResult) {
+                update(proxy, { data: { addTopic }}: { data: AddTopicMutation }) {
                     const id = `Room:${roomId}`;
-                    const oldRes: Room = proxy.readFragment<Room>({
+                    const oldRes: RoomFieldsFragment = proxy.readFragment<RoomFieldsFragment>({
                         fragment: roomFragment,
                         fragmentName: 'roomFields',
                         id
@@ -186,7 +195,7 @@ export class RoomComponent implements OnInit, OnChanges {
         this.apollo.mutate({
             mutation: addCommentMutation,
             variables: { topicId },
-            update(proxy, { data: { addComment }}: AddCommentMutationResponse) {
+            // update(proxy, { data: { addComment }}: AddCommentMutation) {
                 // const id = `Topic:${topicId}`;
                 // const oldRes: Topic = proxy.readFragment<Topic>({
                 //     fragment: topicFragment,
@@ -204,7 +213,7 @@ export class RoomComponent implements OnInit, OnChanges {
                 //     id,
                 //     data: oldRes
                 // });
-            }
+            // }
         });
     }
 
@@ -215,7 +224,7 @@ export class RoomComponent implements OnInit, OnChanges {
             variables: { topicId },
             update(proxy) {
                 const id = `Room:${roomId}`;
-                const oldRes: Room = proxy.readFragment<Room>({
+                const oldRes: RoomFieldsFragment = proxy.readFragment<RoomFieldsFragment>({
                     fragment: roomFragment,
                     fragmentName: 'roomFields',
                     id

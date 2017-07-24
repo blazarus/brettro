@@ -1,5 +1,10 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Comment, Topic, commentFragment } from '../app.component';
+import { commentFragment } from '../app.component';
+import {
+    CommentQuery,
+    CommentFieldsFragment,
+    TopicFieldsFragment
+} from '../../generated/query-types';
 import { topicFragment } from '../room/room.component';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
 import gql from 'graphql-tag';
@@ -31,10 +36,10 @@ mutation deleteComment($commentId: Int!) {
 }
 `;
 
-interface CommentQueryResponse {
-    comment: Comment;
-    loading: boolean;
-}
+// interface CommentQueryResponse {
+//     comment: Comment;
+//     loading: boolean;
+// }
 
 @Component({
     selector: 'app-comment',
@@ -44,7 +49,7 @@ interface CommentQueryResponse {
 export class CommentComponent implements OnInit {
 
     isEditing = false;
-    @Input() comment: Comment;
+    @Input() comment: CommentFieldsFragment;
 
     editValue = '';
 
@@ -52,7 +57,7 @@ export class CommentComponent implements OnInit {
 
     ngOnInit() {
         // TODO just to show that a custom resolver should allow this to come from the cache
-        this.apollo.watchQuery<CommentQueryResponse>({
+        this.apollo.watchQuery<CommentQuery>({
             query: fetchComment,
             variables: {
                 commentId: this.comment.id
@@ -94,7 +99,7 @@ export class CommentComponent implements OnInit {
             variables: { commentId: this.comment.id },
             update: (proxy) => {
                 const id = `Topic:${this.comment.topic.id}`;
-                const oldRes: Topic = proxy.readFragment<Topic>({
+                const oldRes: TopicFieldsFragment = proxy.readFragment<TopicFieldsFragment>({
                     fragment: topicFragment,
                     fragmentName: 'topicFields',
                     id
