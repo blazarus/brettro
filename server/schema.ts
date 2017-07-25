@@ -204,7 +204,7 @@ const resolvers = {
                 roomId
             };
             topics.push(newTopic);
-            pubsub.publish('Topic', {Comment: {mutation: 'CREATED', node: Topic}});
+            pubsub.publish('Topic', {Topic: {mutation: 'CREATED', node: newTopic}});
 
             return newTopic;
         },
@@ -216,7 +216,8 @@ const resolvers = {
             const room = find(rooms, (rm) => rm.id === roomId);
 
             topics.splice(topicIdx, 1);
-            pubsub.publish('Topic', {Comment: {mutation: 'DELETED', node: oldTopic}});
+            console.log(oldTopic);
+            pubsub.publish('Topic', {Topic: {mutation: 'DELETED', node: oldTopic}});
             return room;
         },
         addRoom(root, { title }: { title?: string }): Room {

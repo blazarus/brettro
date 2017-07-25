@@ -7,7 +7,8 @@ import {
     RoomFieldsFragment,
     TopicFieldsFragment,
     CommentFieldsFragment,
-    MySubSubscription,
+    CommentSubscriptionSubscription,
+    TopicSubscriptionSubscription,
     _ModelMutationType
 } from '../../generated/query-types';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
@@ -86,8 +87,8 @@ mutation addTopic($roomId: Int!, $name: String!) {
 ${topicFragment}
 `;
 
-const addCommentSubscription = gql`
-subscription mySub {
+const commentSubscription = gql`
+subscription commentSubscription {
     Comment {
         mutation
         node {
@@ -96,6 +97,18 @@ subscription mySub {
     }
 }
 ${commentFragment}
+`;
+
+const topicSubscription = gql`
+subscription topicSubscription {
+    Topic {
+        mutation
+        node {
+            ...topicFields
+        }
+    }
+}
+${topicFragment}
 `;
 
 const deleteTopicMutation = gql`
@@ -127,37 +140,9 @@ export class RoomComponent implements OnInit, OnChanges {
             variables: { roomId: this.roomIdSubject },
             notifyOnNetworkStatusChange: true
         });
-        this.apollo.subscribe({
-            query: addCommentSubscription
-        })
-            .subscribe(({Comment: {node, mutation}}: MySubSubscription) => {
-                this.roomQuery.updateQuery((prev: RoomQuery): RoomQuery => {
-                    const topicId = node.topic.id;
-                    const topicIdx = findIndex(prev.room.topics, (top: TopicFieldsFragment) => top.id === topicId);
-                    // Apollo-client does a deep freeze of the previous state, so we have to create new instances.
-                    // immutability-helper makes this slightly easier, but is still kind of nasty and not type safe
-                    if (mutation === 'CREATED') {
-                        return update(prev, { room: {topics: {[topicIdx]: {comments: {$push: [node]}}}}});
-                    } else if (mutation === 'UPDATED') {
-                        const commentIdx = findIndex(prev.room.topics[topicIdx].comments, (cmt) => cmt.id === node.id);
-                        if (commentIdx < 0) {
-                            return prev;
-                        }
-                        return update(prev, { room: {topics: {[topicIdx]: {comments: {
-                            [commentIdx]: { $set: node }
-                        }}}}});
-                    } else {
-                        const commentIdx = findIndex(prev.room.topics[topicIdx].comments, (cmt) => cmt.id === node.id);
-                        if (commentIdx < 0) {
-                            return prev;
-                        }
-                        return update(prev, { room: {topics: {[topicIdx]: {comments: {
-                            $splice: [[commentIdx, 1]]
-                        }}}}});
-                    }
 
-                });
-            });
+        this.setupCommentSubscription();
+        this.setupTopicSubscription();
 
         this.roomObs = this.roomQuery.map(({data: {room}}) => room);
         this.roomObs.subscribe((room) => {
@@ -173,6 +158,65 @@ export class RoomComponent implements OnInit, OnChanges {
         if (changes.roomId && !changes.roomId.firstChange) {
             this.roomIdSubject.next(changes.roomId.currentValue);
         }
+    }
+
+    private setupCommentSubscription() {
+        this.apollo.subscribe({
+            query: commentSubscription
+        }).subscribe(({Comment: {node, mutation}}: CommentSubscriptionSubscription) => {
+            this.roomQuery.updateQuery((prev: RoomQuery): RoomQuery => {
+                const topicId = node.topic.id;
+                const topicIdx = findIndex(prev.room.topics, (top: TopicFieldsFragment) => top.id === topicId);
+                // Apollo-client does a deep freeze of the previous state, so we have to create new instances.
+                // immutability-helper makes this slightly easier, but is still kind of nasty and not type safe
+                if (mutation === 'CREATED') {
+                    return update(prev, { room: {topics: {[topicIdx]: {comments: {$push: [node]}}}}});
+                } else if (mutation === 'UPDATED') {
+                    const commentIdx = findIndex(prev.room.topics[topicIdx].comments, (cmt) => cmt.id === node.id);
+                    if (commentIdx < 0) {
+                        return prev;
+                    }
+                    return update(prev, { room: {topics: {[topicIdx]: {comments: {
+                        [commentIdx]: { $set: node }
+                    }}}}});
+                } else {
+                    const commentIdx = findIndex(prev.room.topics[topicIdx].comments, (cmt) => cmt.id === node.id);
+                    if (commentIdx < 0) {
+                        return prev;
+                    }
+                    return update(prev, { room: {topics: {[topicIdx]: {comments: {
+                        $splice: [[commentIdx, 1]]
+                    }}}}});
+                }
+
+            });
+        });
+    }
+
+    private setupTopicSubscription() {
+        this.apollo.subscribe({
+            query: topicSubscription
+        }).subscribe((data: TopicSubscriptionSubscription) => {
+            const {Topic: {node, mutation}} = data;
+            this.roomQuery.updateQuery((prev: RoomQuery): RoomQuery => {
+                // Apollo-client does a deep freeze of the previous state, so we have to create new instances.
+                // immutability-helper makes this slightly easier, but is still kind of nasty and not type safe
+                if (mutation === 'CREATED') {
+                    return update(prev, { room: {topics: {$push: [node]}}});
+                } else if (mutation === 'UPDATED') {
+                    throw new Error('Update subscriptions are not supported for Topics');
+                } else {
+                    const topicIdx = findIndex(prev.room.topics, (tpc) => tpc.id === node.id);
+                    if (topicIdx < 0) {
+                        return prev;
+                    }
+                    return update(prev, { room: {topics: {
+                        $splice: [[topicIdx, 1]]
+                    }}});
+                }
+
+            });
+        });
     }
 
     public trackTopic(index: number, topic: TopicFieldsFragment): number {
@@ -193,26 +237,7 @@ export class RoomComponent implements OnInit, OnChanges {
             const roomId = this.roomId;
             this.apollo.mutate({
                 mutation: addTopicMutation,
-                variables: { roomId, name },
-                update(proxy, { data: { addTopic }}: { data: AddTopicMutation }) {
-                    const id = `Room:${roomId}`;
-                    const oldRes: RoomFieldsFragment = proxy.readFragment<RoomFieldsFragment>({
-                        fragment: roomFragment,
-                        fragmentName: 'roomFields',
-                        id
-                    });
-                    if (!oldRes) {
-                        // Could have been deleted
-                        return;
-                    }
-                    oldRes.topics.push(addTopic);
-                    proxy.writeFragment({
-                        fragment: roomFragment,
-                        fragmentName: 'roomFields',
-                        id,
-                        data: oldRes
-                    });
-                }
+                variables: { roomId, name }
             });
         });
 
@@ -229,27 +254,7 @@ export class RoomComponent implements OnInit, OnChanges {
         const roomId = this.roomId;
         this.apollo.mutate({
             mutation: deleteTopicMutation,
-            variables: { topicId },
-            update(proxy) {
-                const id = `Room:${roomId}`;
-                const oldRes: RoomFieldsFragment = proxy.readFragment<RoomFieldsFragment>({
-                    fragment: roomFragment,
-                    fragmentName: 'roomFields',
-                    id
-                });
-                if (!oldRes) {
-                    // Could have been deleted
-                    return;
-                }
-                const idx = findIndex(oldRes.topics, (topic) => topic.id === topicId);
-                oldRes.topics.splice(idx, 1);
-                proxy.writeFragment({
-                    fragment: roomFragment,
-                    fragmentName: 'roomFields',
-                    id,
-                    data: oldRes
-                });
-            }
+            variables: { topicId }
         })
     }
 
