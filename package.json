@@ -7,7 +7,7 @@
         "start": "ng serve --proxy-config proxy.conf.json",
         "build": "ng build",
         "test": "ng test",
-        "lint": "ng lint",
+        "lint": "ng lint --type-check",
         "e2e": "ng e2e",
         "server": "nodemon --watch server/**/*.ts --exec ts-node ./server/index.ts",
         "codegen:introspect": "apollo-codegen introspect-schema server/schema.graphql --output src/generated/schema.json",

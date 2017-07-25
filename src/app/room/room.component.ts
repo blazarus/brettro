@@ -2,7 +2,10 @@ import { Component, OnInit, OnChanges, SimpleChanges, Input, ChangeDetectorRef }
 import { commentFragment } from '../app.component';
 import {
     AddCommentMutation,
+    AddCommentMutationVariables,
     AddTopicMutation,
+    AddTopicMutationVariables,
+    DeleteTopicMutationVariables,
     RoomQuery,
     RoomFieldsFragment,
     TopicFieldsFragment,
@@ -19,24 +22,6 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { MdDialog } from '@angular/material';
 import { AddTopicDialogComponent } from '../add-topic-dialog/add-topic-dialog.component';
 import update from 'immutability-helper';
-
-// interface RoomQuery {
-//     room: Room;
-//     loading: boolean;
-// }
-// interface AddCommentMutationResponse {
-//     data: {
-//         addComment: Comment
-//     };
-// }
-// interface AddTopicMutationResult {
-//     data: {
-//         addTopic: Topic
-//     }
-// }
-// interface DeleteTopicMutationResponse {
-//     data: {}
-// }
 
 export const topicFragment = gql`
 fragment topicFields on Topic {
@@ -234,27 +219,28 @@ export class RoomComponent implements OnInit, OnChanges {
                 return;
             }
 
-            const roomId = this.roomId;
+            const variables: AddTopicMutationVariables = { roomId: this.roomId, name };
             this.apollo.mutate({
                 mutation: addTopicMutation,
-                variables: { roomId, name }
+                variables
             });
         });
 
     }
 
     public addComment(topicId: number): void {
+        const variables: AddCommentMutationVariables = {topicId};
         this.apollo.mutate({
             mutation: addCommentMutation,
-            variables: { topicId }
+            variables
         });
     }
 
     public deleteTopic(topicId: number): void {
-        const roomId = this.roomId;
+        const variables: DeleteTopicMutationVariables = { topicId };
         this.apollo.mutate({
             mutation: deleteTopicMutation,
-            variables: { topicId }
+            variables
         })
     }
 

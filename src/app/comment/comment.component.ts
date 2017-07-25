@@ -3,12 +3,11 @@ import { commentFragment } from '../app.component';
 import {
     CommentQuery,
     CommentFieldsFragment,
-    TopicFieldsFragment
+    DeleteCommentMutationVariables,
+    UpdateCommentMutationVariables
 } from '../../generated/query-types';
-import { topicFragment } from '../room/room.component';
-import { Apollo, ApolloQueryObservable } from 'apollo-angular';
+import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
-import { findIndex } from 'lodash';
 
 const fetchComment = gql`
 query Comment($commentId: Int!) {
@@ -76,10 +75,10 @@ export class CommentComponent implements OnInit {
     }
 
     public saveComment(): void {
-        console.log('saving comment', this.editValue);
+        const variables: UpdateCommentMutationVariables = { commentId: this.comment.id, value: this.editValue };
         this.apollo.mutate({
             mutation: updateComment,
-            variables: { commentId: this.comment.id, value: this.editValue }
+            variables
         })
             .toPromise()
             .then(() => {
@@ -88,9 +87,10 @@ export class CommentComponent implements OnInit {
     }
 
     public deleteComment(): void {
+        const variables: DeleteCommentMutationVariables = { commentId: this.comment.id };
         this.apollo.mutate({
             mutation: deleteComment,
-            variables: { commentId: this.comment.id }
+            variables
         });
     }
 

@@ -1,14 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
-import { ApolloError } from 'apollo-client';
 import gql from 'graphql-tag';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 import {
     AllRoomsQuery,
-    RoomQuery,
     RoomFieldsFragment
 } from '../generated/query-types';
 
@@ -31,28 +28,6 @@ fragment commentFields on Comment {
     }
 }
 `;
-
-// export class Room {
-//     id: number;
-//     title: string;
-//     topics?: [Topic];
-// }
-// export class Topic {
-//     id: number;
-//     name: string;
-//     comments: [Comment];
-// }
-// export class Comment {
-//     id: number;
-//     exposed: boolean;
-//     value: string;
-//     topic: {
-//         id: number
-//     }
-// }
-// interface AllRoomsQueryResponse {
-//     rooms: [Room];
-// }
 
 @Component({
     selector: 'app-root',
