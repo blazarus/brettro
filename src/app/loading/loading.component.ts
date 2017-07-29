@@ -1,22 +1,29 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { ApolloQueryObservable } from 'apollo-angular';
 import { ApolloError } from 'apollo-client';
+import { Subscription } from 'rxjs/Subscription';
+
+// Component to consistently display loading and error states.
+// This subscribes to the passed in query observable, so in order to avoid executing the query
+// twice you should probably make sure to multicast it.
 
 @Component({
     selector: 'app-loading',
     templateUrl: './loading.component.html',
     styleUrls: ['./loading.component.css']
 })
-export class LoadingComponent implements OnInit {
+export class LoadingComponent implements OnInit, OnDestroy {
 
+    // XXX if this has been multicast, it will just be a normal Observable
     @Input() queryResult: ApolloQueryObservable<any>;
     loading = true;
     error: ApolloError;
+    subscription: Subscription;
 
     constructor() { }
 
-    ngOnInit() {
-        this.queryResult.subscribe({
+    public ngOnInit() {
+        this.subscription = this.queryResult.subscribe({
             next: ({loading}) => {
                 // Note: loading isn't updating after initial load is done, even when
                 // notifyOnNetworkStatusChange is set to true in the query
@@ -26,6 +33,10 @@ export class LoadingComponent implements OnInit {
                 this.error = err;
             }
         });
+    }
+
+    public ngOnDestroy() {
+        this.subscription.unsubscribe();
     }
 
 }

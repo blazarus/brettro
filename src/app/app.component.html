@@ -2,9 +2,9 @@
 <app-loading [queryResult]="queryResult">
     <!-- Just using ngIf for convenience to get the non-async rooms -->
     <div *ngIf="roomsObs | async as rooms">
-        <md-select [(ngModel)]="selectedRoomId">
+        <md-select [formControl]="selectedRmCtrl">
             <md-option
-                *ngFor="let room of rooms;"
+                *ngFor="let room of rooms"
                 [value]="room.id">{{room.title}}</md-option>
         </md-select>
         <app-room [roomId]="selectedRoomId"></app-room>

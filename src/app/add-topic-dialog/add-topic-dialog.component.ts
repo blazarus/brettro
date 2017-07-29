@@ -6,7 +6,7 @@ import { Component, OnInit } from '@angular/core';
     styleUrls: ['./add-topic-dialog.component.css']
 })
 export class AddTopicDialogComponent implements OnInit {
-    public newTopicName = ''
+    public newTopicName = '';
 
     constructor() { }
 

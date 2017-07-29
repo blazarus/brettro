@@ -2,9 +2,9 @@ import { Component, OnInit, Input } from '@angular/core';
 import { commentFragment } from '../app.component';
 import {
     CommentQuery,
-    CommentFieldsFragment,
-    DeleteCommentMutationVariables,
-    UpdateCommentMutationVariables
+    commentFieldsFragment,
+    deleteCommentMutationVariables,
+    updateCommentMutationVariables
 } from '../../generated/query-types';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
@@ -43,7 +43,7 @@ mutation deleteComment($commentId: Int!) {
 export class CommentComponent implements OnInit {
 
     isEditing = false;
-    @Input() comment: CommentFieldsFragment;
+    @Input() comment: commentFieldsFragment;
 
     editValue = '';
 
@@ -75,19 +75,18 @@ export class CommentComponent implements OnInit {
     }
 
     public saveComment(): void {
-        const variables: UpdateCommentMutationVariables = { commentId: this.comment.id, value: this.editValue };
+        const variables: updateCommentMutationVariables = { commentId: this.comment.id, value: this.editValue };
         this.apollo.mutate({
             mutation: updateComment,
             variables
         })
-            .toPromise()
-            .then(() => {
+            .subscribe(() => {
                 this.isEditing = false;
             });
     }
 
     public deleteComment(): void {
-        const variables: DeleteCommentMutationVariables = { commentId: this.comment.id };
+        const variables: deleteCommentMutationVariables = { commentId: this.comment.id };
         this.apollo.mutate({
             mutation: deleteComment,
             variables

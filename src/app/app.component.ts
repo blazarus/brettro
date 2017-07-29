@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
+import { ApolloQueryResult } from 'apollo-client';
 import gql from 'graphql-tag';
-import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/toPromise';
+import 'rxjs/add/operator/first';
+import 'rxjs/add/operator/publishReplay';
+import { Observable, Subscription, BehaviorSubject } from 'rxjs/Rx';
 import {
-    AllRoomsQuery,
-    RoomFieldsFragment
+    AllRoomsQuery
 } from '../generated/query-types';
 
 const allRoomsQuery = gql`
@@ -34,24 +36,34 @@ fragment commentFields on Comment {
     styleUrls: [],
     templateUrl: 'app.component.html'
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
     title = 'Brettro';
-    selectedRoomId: number;
-    queryResult: ApolloQueryObservable<AllRoomsQuery>;
-    roomsObs: Observable<[RoomFieldsFragment]>;
+    selectedRoomId = new BehaviorSubject<number>(-1);
+    queryResult: Observable<ApolloQueryResult<AllRoomsQuery>>;
+    roomsObs: Observable<{id: number, title: string}[]>;
+    selectedRmCtrl = new FormControl();
+    private subscription: Subscription;
 
     constructor(private apollo: Apollo) {}
 
     public ngOnInit() {
-        this.queryResult = this.apollo.watchQuery<AllRoomsQuery>({
+        const result = this.apollo.watchQuery<AllRoomsQuery>({
             query: allRoomsQuery
         });
-        // XXX probably need to be cleaning up in onDestroy
+        this.queryResult = result.publishReplay(1).refCount();
+
         this.roomsObs = this.queryResult.map(({data: {rooms}}) => rooms);
-        this.roomsObs.subscribe((rooms) => {
+        this.selectedRmCtrl.valueChanges.subscribe(this.selectedRoomId);
+
+        // Use first so later updates to the query can't change the selected room
+        this.subscription = this.roomsObs.first().subscribe((rooms) => {
             // assume there is at least one room for now
-            this.selectedRoomId = rooms[0].id;
+            this.selectedRmCtrl.setValue(rooms[0].id);
         });
+    }
+
+    public ngOnDestroy() {
+        this.subscription.unsubscribe();
     }
 
 };
