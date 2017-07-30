@@ -19,10 +19,12 @@ import { ApolloQueryResult } from 'apollo-client';
 import gql from 'graphql-tag';
 import { find, findIndex } from 'lodash';
 import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { MdDialog } from '@angular/material';
 import { AddTopicDialogComponent } from '../add-topic-dialog/add-topic-dialog.component';
 import update from 'immutability-helper';
+import { autoDispose } from '../../auto-dispose';
 
 export const topicFragment = gql`
 fragment topicFields on Topic {
@@ -116,6 +118,12 @@ export class RoomComponent implements OnInit {
 
     roomObs: Observable<roomFieldsFragment>;
     roomQuery: ApolloQueryObservable<RoomQuery>;
+    @autoDispose
+    private roomSub: Subscription;
+    @autoDispose
+    private commentSubscriptionSub: Subscription;
+    @autoDispose
+    private topicSubscriptionSub: Subscription;
 
     constructor(private apollo: Apollo, private dialog: MdDialog, private cdr: ChangeDetectorRef) {}
 
@@ -130,7 +138,7 @@ export class RoomComponent implements OnInit {
         this.setupTopicSubscription();
 
         this.roomObs = this.roomQuery.map(({data: {room}}) => room);
-        this.roomObs.subscribe((room) => {
+        this.roomSub = this.roomObs.subscribe((room) => {
             // For some reason I need this for the update Comment subscription to actually get reflected in the UI immediately.
             // Seems like something in apollo must be happening asyncronously and not triggering change detection
             setTimeout(() => {
@@ -140,7 +148,7 @@ export class RoomComponent implements OnInit {
     }
 
     private setupCommentSubscription() {
-        this.apollo.subscribe({
+        this.commentSubscriptionSub = this.apollo.subscribe({
             query: commentSubscription
         }).subscribe(({Comment: {node, mutation}}: commentSubscriptionSubscription) => {
             this.roomQuery.updateQuery((prev: RoomQuery): RoomQuery => {
@@ -173,7 +181,7 @@ export class RoomComponent implements OnInit {
     }
 
     private setupTopicSubscription() {
-        this.apollo.subscribe({
+        this.topicSubscriptionSub = this.apollo.subscribe({
             query: topicSubscription
         }).subscribe((data: topicSubscriptionSubscription) => {
             const {Topic: {node, mutation}} = data;

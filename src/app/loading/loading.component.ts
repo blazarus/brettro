@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { ApolloQueryObservable } from 'apollo-angular';
 import { ApolloError } from 'apollo-client';
 import { Subscription } from 'rxjs/Subscription';
+import { autoDispose } from '../../auto-dispose';
 
 // Component to consistently display loading and error states.
 // This subscribes to the passed in query observable, so in order to avoid executing the query
@@ -12,12 +13,13 @@ import { Subscription } from 'rxjs/Subscription';
     templateUrl: './loading.component.html',
     styleUrls: ['./loading.component.css']
 })
-export class LoadingComponent implements OnInit, OnDestroy {
+export class LoadingComponent implements OnInit {
 
     // XXX if this has been multicast, it will just be a normal Observable
     @Input() queryResult: ApolloQueryObservable<any>;
     loading = true;
     error: ApolloError;
+    @autoDispose
     subscription: Subscription;
 
     constructor() { }
@@ -33,10 +35,6 @@ export class LoadingComponent implements OnInit, OnDestroy {
                 this.error = err;
             }
         });
-    }
-
-    public ngOnDestroy() {
-        this.subscription.unsubscribe();
     }
 
 }

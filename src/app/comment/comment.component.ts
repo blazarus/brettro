@@ -8,6 +8,8 @@ import {
 } from '../../generated/query-types';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
+import { Subscription } from 'rxjs/Rx';
+import { autoDispose } from '../../auto-dispose';
 
 const fetchComment = gql`
 query Comment($commentId: Int!) {
@@ -45,13 +47,18 @@ export class CommentComponent implements OnInit {
     isEditing = false;
     @Input() comment: commentFieldsFragment;
 
+    @autoDispose
+    private commentQuerySub: Subscription;
+    @autoDispose
+    private saveCommentSub: Subscription;
+
     editValue = '';
 
     constructor(private apollo: Apollo) {}
 
     ngOnInit() {
         // TODO just to show that a custom resolver should allow this to come from the cache
-        this.apollo.watchQuery<CommentQuery>({
+        this.commentQuerySub = this.apollo.watchQuery<CommentQuery>({
             query: fetchComment,
             variables: {
                 commentId: this.comment.id
@@ -76,7 +83,7 @@ export class CommentComponent implements OnInit {
 
     public saveComment(): void {
         const variables: updateCommentMutationVariables = { commentId: this.comment.id, value: this.editValue };
-        this.apollo.mutate({
+        this.saveCommentSub = this.apollo.mutate({
             mutation: updateComment,
             variables
         })
