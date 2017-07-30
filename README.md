@@ -1,28 +1,31 @@
-# VotingApp
+# Brettro
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.0.0.
+A simple application to help teams do retrospectives. It is inspired by [funretro](http://funretro.github.io/distributed/) and is meant to be a way for me to learn Angular, TypeScript, and graphql.
 
-## Development server
+While there is a server, at this point it only stores data in memory and is not persisten.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+The project uses a variety of graphql tools from the [apollo](https://github.com/apollographql) project.
 
-## Code scaffolding
+## Installation
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive/pipe/service/class/module`.
+Make sure you have [nodejs](https://nodejs.org) and [yarn](https://yarnpkg.com/) installed, and then run
+```
+yarn
+```
+from the root of the repository to install required packages.
 
-## Build
+## Development
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-Before running the tests make sure you are serving the app via `ng serve`.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+Start by generating TypeScript types from the graphql schema:
+```
+yarn run codegen
+```
+Then start the graphql server:
+```
+yarn run server
+```
+And finally start the dev server for the front end:
+```
+yarn start
+```
+The app will be available at `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
