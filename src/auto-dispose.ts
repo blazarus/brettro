@@ -1,16 +1,20 @@
 import { OnDestroy } from '@angular/core';
 import { isFunction } from 'lodash';
 
-const disposalList: symbol = Symbol('disposalList');
+const disposalList = Symbol('disposalList');
 
-export function autoDispose(target: object, propertyKey: string): void {
+// We expect this decorator to be used on a component class which may or may not define it's own ngOnDestroy method
+interface ComponentClass {
+    ngOnDestroy?: () => void
+}
+
+export function autoDispose(target: ComponentClass, propertyKey: string): void {
     if (!target[disposalList]) {
         // Set up disposal list and modify wrap the original ngOnDestroy (if it exists) to call dispose
         target[disposalList] = [];
-        const origOnDestroy = (<OnDestroy>target).ngOnDestroy;
-        // XXX Not sure if this is the "correct" way to do this in typescript
-        (<OnDestroy>target).ngOnDestroy = function() {
-            console.log('here');
+        const origOnDestroy = target.ngOnDestroy;
+
+        target.ngOnDestroy = function() {
             disposeContext(this);
             if (isFunction(origOnDestroy)) {
                 origOnDestroy.call(this);
@@ -29,3 +33,4 @@ function disposeContext(target: object) {
         }
     }
 }
+
