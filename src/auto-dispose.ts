@@ -1,5 +1,5 @@
-import { OnDestroy } from '@angular/core';
 import { isFunction } from 'lodash';
+import { Subscription } from 'rxjs/Subscription';
 
 const disposalList = Symbol('disposalList');
 
@@ -34,3 +34,33 @@ function disposeContext(target: object) {
     }
 }
 
+declare module 'rxjs/Subscription' {
+    // tslint:disable-next-line: no-shadowed-variable
+    interface Subscription {
+        autoDispose: (target: ComponentClass) => Subscription
+    }
+}
+
+const autoDisposeSubs = Symbol('autoDisposeSubs');
+Subscription.prototype.autoDispose = function(target: ComponentClass) {
+    if (!target[autoDisposeSubs]) {
+        // set up ngOnDestroy
+        target[autoDisposeSubs] = []; // XXX can I make this typesafe somehow?
+        const origOnDestroy = target.ngOnDestroy;
+
+        target.ngOnDestroy = function() {
+            disposeAllSubs(target);
+            if (isFunction(origOnDestroy)) {
+                origOnDestroy.call(this);
+            }
+        }
+    }
+    target[autoDisposeSubs].push(this);
+    return this;
+}
+
+function disposeAllSubs(target: object) {
+    for (const sub of target[autoDisposeSubs]) {
+        sub.unsubscribe();
+    }
+}

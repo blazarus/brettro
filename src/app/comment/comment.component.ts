@@ -47,7 +47,7 @@ export class CommentComponent implements OnInit {
     isEditing = false;
     @Input() comment: commentFieldsFragment;
 
-    @autoDispose
+    // @autoDispose
     private commentQuerySub: Subscription;
     @autoDispose
     private saveCommentSub: Subscription;
@@ -67,7 +67,8 @@ export class CommentComponent implements OnInit {
             .subscribe(() => {
                 // Not doing anything with this right now, but could instead allow the parent to only pass the comment id and not care
                 // about what data is needed in the comment itself
-            });
+            })
+            .autoDispose(this);
     }
 
     public startEdit(): void {
