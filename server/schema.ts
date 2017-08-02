@@ -1,90 +1,11 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import { find, filter, findIndex } from 'lodash';
 import { PubSub } from 'graphql-subscriptions';
+import { join } from 'path';
+import { readFileSync } from 'fs';
 
 const pubsub = new PubSub();
-const schema = [`
-type Comment {
-    id: Int!
-    exposed: Boolean!
-    value: String
-    votes: Int
-    topic: Topic!
-}
-
-type Topic {
-    id: Int!
-    name: String!
-    comments: [Comment]
-    room: Room!
-}
-
-type Room {
-    id: Int!
-    title: String
-    topics: [Topic]
-}
-
-type Query {
-    comment(commentId: Int!): Comment
-    comments: [Comment]
-    topics: [Topic]
-    room(roomId: Int!): Room
-    rooms: [Room]
-}
-
-type Mutation {
-    addComment(topicId: Int!): Comment
-    updateComment(commentId: Int!, value: String): Comment
-    deleteComment(commentId: Int!): Topic
-    addTopic(roomId: Int!, name: String): Topic
-    deleteTopic(topicId: Int!): Room
-    addRoom(title: String): Room
-    updateRoom(roomId: Int!, title: String!): Room
-}
-
-type Subscription {
-    Room(filter: SubscriptionFilter): RoomSubscriptionPayload
-    Topic(filter: SubscriptionFilter): TopicSubscriptionPayload
-    Comment: CommentSubscriptionPayload
-}
-
-input SubscriptionFilter {
-  mutation_in: [_ModelMutationType!]
-}
-
-interface SubscriptionPayload {
-    mutation: _ModelMutationType!
-}
-
-type RoomSubscriptionPayload implements SubscriptionPayload {
-    mutation: _ModelMutationType!
-    node: Room
-}
-
-type TopicSubscriptionPayload implements SubscriptionPayload {
-    mutation: _ModelMutationType!
-    node: Topic
-}
-
-type CommentSubscriptionPayload implements SubscriptionPayload {
-    mutation: _ModelMutationType!
-    node: Comment
-}
-
-enum _ModelMutationType {
-    CREATED
-    UPDATED
-    DELETED
-}
-
-# root schema
-schema {
-    query: Query
-    mutation: Mutation
-    subscription: Subscription
-}
-`];
+const schema = [readFileSync(join(__dirname, 'schema.graphql'), 'utf8')];
 
 class Room {
     id: number;
