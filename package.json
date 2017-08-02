@@ -4,7 +4,7 @@
     "license": "MIT",
     "scripts": {
         "ng": "ng",
-        "start": "ng serve --proxy-config proxy.conf.json",
+        "start": "npm run codegen && ng serve --proxy-config proxy.conf.json",
         "build": "ng build",
         "test": "ng test",
         "lint": "ng lint --type-check",
@@ -12,7 +12,8 @@
         "server": "nodemon --watch server/**/*.ts --exec ts-node ./server/index.ts",
         "codegen:introspect": "apollo-codegen introspect-schema server/schema.graphql --output src/generated/schema.json",
         "codegen:generate": "apollo-codegen generate './src/**/*.ts' --schema src/generated/schema.json --target typescript --output src/generated/query-types.ts",
-        "codegen": "npm run codegen:introspect && npm run codegen:generate"
+        "codegen": "mkdirp ./src/generated && npm run codegen:introspect && npm run codegen:generate",
+        "clean": "rimraf ./src/generated"
     },
     "private": true,
     "dependencies": {
@@ -60,8 +61,10 @@
         "karma-coverage-istanbul-reporter": "^1.3.0",
         "karma-jasmine": "~1.1.0",
         "karma-jasmine-html-reporter": "^0.2.2",
+        "mkdirp": "^0.5.1",
         "nodemon": "^1.11.0",
         "protractor": "~5.1.0",
+        "rimraf": "^2.6.1",
         "ts-node": "^3.0.6",
         "tslint": "^5.4.3",
         "typescript": "2.3.4"
