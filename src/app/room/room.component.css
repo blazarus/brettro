@@ -3,3 +3,8 @@
     float: left;
     padding: 10px;
 }
+
+.comment-list {
+    list-style: none;
+    padding: 0;
+}

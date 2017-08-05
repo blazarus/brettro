@@ -10,7 +10,9 @@ import {
     MdInputModule,
     MdDialogModule,
     MdSelectModule,
-    MdOptionModule
+    MdOptionModule,
+    MdProgressSpinnerModule,
+    MdToolbarModule
 } from '@angular/material';
 
 import { AppComponent } from './app.component';
@@ -93,7 +95,9 @@ export function provideClient(): ApolloClient {
         MdInputModule,
         MdDialogModule,
         MdSelectModule,
-        MdOptionModule
+        MdOptionModule,
+        MdProgressSpinnerModule,
+        MdToolbarModule
     ],
     entryComponents: [
         AddTopicDialogComponent

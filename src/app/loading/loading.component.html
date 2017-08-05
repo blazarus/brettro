@@ -1,5 +1,7 @@
 <div *ngIf="!error; else errorTpl">
-    <div *ngIf="loading; else theContent">Loading...</div>
+    <div *ngIf="loading; else theContent">
+        <md-spinner></md-spinner>
+    </div>
 </div>
 <ng-template #errorTpl>Error!</ng-template>
 <ng-template #theContent>

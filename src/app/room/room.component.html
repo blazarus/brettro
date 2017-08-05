@@ -18,7 +18,7 @@
                 (click)="addComment(topic.id)">
                 <md-icon>add</md-icon>
             </button>
-            <ul>
+            <ul class="comment-list">
                 <li *ngFor="let comment of topic.comments; trackBy: trackComment">
                     <app-comment [comment]="comment"></app-comment>
                 </li>

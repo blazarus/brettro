@@ -5,7 +5,10 @@ const disposalList = Symbol('disposalList');
 
 // We expect this decorator to be used on a component class which may or may not define it's own ngOnDestroy method
 interface ComponentClass {
-    ngOnDestroy?: () => void
+    // Index signature needed here because typescript 2.4 is more strict about weak types.
+    // See https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-4.html
+    [key: string]: any;
+    ngOnDestroy?: () => void;
 }
 
 export function autoDispose(target: ComponentClass, propertyKey: string): void {

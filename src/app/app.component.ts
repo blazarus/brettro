@@ -7,7 +7,9 @@ import gql from 'graphql-tag';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/first';
 import 'rxjs/add/operator/publishReplay';
-import { Observable, Subscription, BehaviorSubject } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import {
     AllRoomsQuery
 } from '../generated/query-types';
@@ -35,7 +37,7 @@ fragment commentFields on Comment {
 
 @Component({
     selector: 'app-root',
-    styleUrls: [],
+    styleUrls: ['./app.component.css'],
     templateUrl: 'app.component.html'
 })
 export class AppComponent implements OnInit {
