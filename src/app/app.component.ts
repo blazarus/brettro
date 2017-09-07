@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { Apollo, ApolloQueryObservable } from 'apollo-angular';
+import { Apollo } from 'apollo-angular';
 import { ApolloQueryResult } from 'apollo-client';
 import gql from 'graphql-tag';
 import 'rxjs/add/operator/map';

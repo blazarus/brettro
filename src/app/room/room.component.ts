@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, SimpleChanges, Input, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectorRef } from '@angular/core';
 import { commentFragment } from '../app.component';
 import {
     addCommentMutation,
@@ -11,13 +11,11 @@ import {
     topicFieldsFragment,
     commentFieldsFragment,
     commentSubscriptionSubscription,
-    topicSubscriptionSubscription,
-    _ModelMutationType
+    topicSubscriptionSubscription
 } from '../../generated/query-types';
 import { Apollo, ApolloQueryObservable } from 'apollo-angular';
-import { ApolloQueryResult } from 'apollo-client';
 import gql from 'graphql-tag';
-import { find, findIndex } from 'lodash';
+import { findIndex } from 'lodash';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
